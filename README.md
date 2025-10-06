@@ -28,16 +28,3 @@ python text_processor.py --lines example.txt
 # Show detailed file information
 python text_processor.py --info example.txt
 ```
-
-## Requirements
-
-- Python 3.6 or higher
-- No external dependencies (uses only standard library)
-
-## About
-
-This project was created as part of a Git and GitHub proficiency test, demonstrating:
-- Basic Python scripting with argument parsing
-- Command-line interface design
-- Git branching and pull request workflow
-- Repository management best practices
