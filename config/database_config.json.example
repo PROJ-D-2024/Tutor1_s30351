@@ -1,0 +1,24 @@
+{
+  "database": {
+    "type": "postgresql",
+    "host": "localhost",
+    "port": 5432,
+    "database_name": "thesis_data",
+    "username": "your_username",
+    "password": "your_password",
+    "schema": "public"
+  },
+  "data_paths": {
+    "raw_data": "data/raw/",
+    "processed_data": "data/processed/",
+    "cleaned_data": "data/cleaned/"
+  },
+  "cleaning_options": {
+    "remove_duplicates": true,
+    "handle_missing_values": true,
+    "outlier_detection_method": "IQR",
+    "outlier_threshold": 1.5,
+    "standardize_categorical": true,
+    "normalize_numerical": false
+  }
+}
