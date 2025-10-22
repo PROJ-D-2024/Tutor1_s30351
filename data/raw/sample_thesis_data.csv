@@ -1,0 +1,37 @@
+id,student_name,age,gpa,enrollment_date,major,credits_completed,graduation_year,thesis_score,research_hours
+1,John Smith,23,3.45,2020-09-01,Computer Science,90,2024,85.5,120
+2,Jane Doe,22,3.89,2020-09-01,Mathematics,95,2024,92.3,150
+3,Bob Johnson,24,3.12,2019-09-01,Physics,110,2023,78.9,95
+4,Alice Williams,23,3.67,2020-09-01,Computer Science,88,2024,88.7,135
+5,Charlie Brown,25,2.95,2018-09-01,Chemistry,120,2023,75.2,80
+6,Diana Prince,22,3.91,2020-09-01,Biology,92,2024,94.1,165
+7,John Smith,23,3.45,2020-09-01,Computer Science,90,2024,85.5,120
+8,Frank Miller,24,3.23,2019-09-01,Mathematics,105,2023,82.4,110
+9,Grace Lee,21,3.78,2021-09-01,Physics,75,2025,89.6,140
+10,Henry Ford,23,3.56,2020-09-01,Computer Science,87,2024,86.3,125
+11,Ivy Chen,22,3.88,2020-09-01,Biology,93,2024,91.8,155
+12,Jack Ryan,26,2.87,2017-09-01,Chemistry,125,2022,72.5,70
+13,Karen White,23,3.65,2020-09-01,Mathematics,89,2024,87.9,130
+14,Leo Martinez,24,,2019-09-01,Physics,108,2023,81.2,105
+15,Mary Johnson,22,3.82,2020-09-01,Computer Science,91,2024,90.4,145
+16,Nathan Drake,25,3.34,2018-09-01,Chemistry,115,2023,79.8,90
+17,Olivia Pope,21,3.93,2021-09-01,Biology,78,2025,93.7,160
+18,Peter Parker,23,3.51,09/01/2020,Computer Science,86,2024,85.9,122
+19,Quinn Fabray,22,3.77,2020-09-01,Mathematics,94,2024,,148
+20,Rachel Green,24,3.28,2019-09-01,Physics,107,2023,83.5,112
+21,Sam Wilson,23,3.61,2020-09-01,Computer Science,88,2024,87.2,128
+22,Tina Turner,22,3.85,2020-09-01,Biology,92,2024,91.3,152
+23,Uma Thurman,25,3.19,2018-09-01,Chemistry,118,2023,77.6,85
+24,Victor Stone,24,3.48,2019-09-01,Mathematics,103,2023,84.7,115
+25,Wanda Maximoff,21,3.96,2021-09-01,Physics,76,2025,95.2,170
+26,Xavier Woods,23,3.58,2020-09-01,Computer Science,87,2024,86.8,126
+27,Yara Shahidi,22,3.81,2020-09-01,Biology,93,2024,90.9,149
+28,Zoe Saldana,24,3.31,2019/09/01,Chemistry,109,2023,80.5,108
+29,Adam Driver,23,3.64,2020-09-01,Mathematics,89,2024,87.6,131
+30,Betty Cooper,22,3.87,2020-09-01,Computer Science,91,2024,92.1,147
+31,Carl Grimes,150,3.42,2020-09-01,Physics,88,2024,84.3,118
+32,Donna Noble,23,3.69,2020-09-01,Biology,90,2024,88.4,133
+33,Ethan Hunt,24,3.26,2019-09-01,Chemistry,106,2023,81.8,102
+34,Fiona Gallagher,22,3.79,2020-09-01,Mathematics,94,2024,90.2,143
+35,George Costanza,25,3.15,2018-09-01,Computer Science,119,2023,76.9,88
+
