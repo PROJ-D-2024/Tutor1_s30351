@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Data Cleaning Module
-Provides comprehensive data cleaning functionality including missing value handling,
-duplicate removal, outlier detection, and data type correction.
-"""
 
 import logging
 import pandas as pd

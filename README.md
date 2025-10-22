@@ -2,7 +2,7 @@
 
 A comprehensive data cleaning and standardization pipeline with database integration for thesis research projects. This project implements professional-grade ETL (Extract, Transform, Load) operations with modular, reusable code.
 
-## 📋 Project Overview
+## Project Overview
 
 This repository implements **Task 2 (Tutor3)** focusing on:
 - Data standardization (normalization, scaling, date formatting)
@@ -11,7 +11,7 @@ This repository implements **Task 2 (Tutor3)** focusing on:
 - Automated data pipeline with error handling
 - Comprehensive documentation and best practices
 
-## 🚀 Features
+## Features
 
 ### Data Cleaning Capabilities
 - **Missing Data Handling**: Multiple strategies (drop, mean, median, mode imputation)
@@ -42,73 +42,6 @@ This repository implements **Task 2 (Tutor3)** focusing on:
 - **Command-Line Interface**: Easy-to-use CLI for common operations
 - **Logging**: Comprehensive logging to file and console
 - **Error Handling**: Robust error handling throughout the pipeline
-
-## 📁 Project Structure
-
-```
-Tutor1_s30351/
-├── config/
-│   └── database_config.json      # Database and pipeline configuration
-├── data/
-│   ├── raw/                      # Raw input data
-│   │   └── sample_thesis_data.csv
-│   ├── processed/                # Intermediate processed data
-│   └── cleaned/                  # Final cleaned data
-├── scripts/
-│   └── data_pipeline.py          # Main pipeline script
-├── database_manager.py           # Database operations module
-├── data_cleaning.py              # Data cleaning functions
-├── data_standardization.py       # Normalization and standardization
-├── requirements.txt              # Python dependencies
-├── README.md                     # This file
-└── text_processor.py             # Legacy text processing utility
-```
-
-## 🛠️ Installation
-
-### Prerequisites
-- Python 3.8 or higher
-- PostgreSQL 12 or higher
-- pip package manager
-
-### Setup Instructions
-
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd Tutor1_s30351
-```
-
-2. **Create a virtual environment** (recommended):
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
-
-4. **Configure database**:
-Edit `config/database_config.json` with your PostgreSQL credentials:
-```json
-{
-  "database": {
-    "type": "postgresql",
-    "host": "localhost",
-    "port": 5432,
-    "database_name": "thesis_data",
-    "username": "your_username",
-    "password": "your_password",
-    "schema": "public"
-  }
-}
-```
-
-⚠️ **Important**: The `database_config.json` file should be added to `.gitignore` to protect credentials.
-
-## 📖 Usage
 
 ### Command-Line Interface
 
@@ -175,7 +108,7 @@ db_manager.insert_dataframe(df_standardized, 'thesis_data')
 db_manager.close_all_connections()
 ```
 
-## ⚙️ Configuration Options
+## Configuration Options
 
 ### Cleaning Options
 ```json
@@ -219,7 +152,7 @@ db_manager.close_all_connections()
 - `standardize_dates`: Convert dates to uniform format
 - `date_format`: "ISO", "US", or "EU"
 
-## 📊 Data Standardization Methods
+## Data Standardization Methods
 
 ### Min-Max Scaling
 Scales data to a fixed range (typically 0-1):
@@ -239,15 +172,8 @@ Uses median and IQR (resistant to outliers):
 X_scaled = (X - median) / IQR
 ```
 
-## 🔒 Security Best Practices
 
-1. **Never commit credentials**: Add `config/database_config.json` to `.gitignore`
-2. **Use environment variables**: Consider using `.env` files for sensitive data
-3. **Restrict database permissions**: Use read-only accounts where possible
-4. **Validate input data**: Always validate and sanitize user input
-5. **Use connection pooling**: Prevents connection exhaustion attacks
-
-## 🧪 Testing
+## Testing
 
 Run the pipeline with sample data:
 
@@ -264,97 +190,6 @@ The sample data includes:
 - Duplicates (for testing deduplication)
 - Outliers (for testing outlier detection)
 - Inconsistent date formats (for testing standardization)
-
-## 📝 Logging
-
-The pipeline creates detailed logs in `data_pipeline.log`:
-
-```bash
-# View real-time logs
-tail -f data_pipeline.log
-```
-
-Log levels:
-- **INFO**: Normal operations and progress
-- **WARNING**: Non-critical issues
-- **ERROR**: Critical errors requiring attention
-- **DEBUG**: Detailed diagnostic information
-
-## 🤝 Development Workflow
-
-### Branch Strategy
-
-This project uses feature branches for development:
-
-```bash
-# Create feature branch
-git checkout -b data-standardization
-
-# Make changes and commit
-git add .
-git commit -m "feat: implement Min-Max scaling"
-
-# Push to remote
-git push origin data-standardization
-
-# Create pull request for review
-```
-
-### Commit Message Convention
-
-Follow conventional commits format:
-
-- `feat:` New features
-- `fix:` Bug fixes
-- `docs:` Documentation changes
-- `refactor:` Code refactoring
-- `test:` Adding tests
-- `chore:` Maintenance tasks
-
-Examples:
-```bash
-git commit -m "feat: add Z-score normalization"
-git commit -m "fix: handle missing values in date columns"
-git commit -m "docs: update README with usage examples"
-```
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues
-
-**Error**: `Connection refused`
-```bash
-# Check if PostgreSQL is running
-sudo systemctl status postgresql  # Linux
-brew services list  # macOS
-```
-
-**Error**: `Authentication failed`
-- Verify credentials in `config/database_config.json`
-- Check PostgreSQL user permissions
-
-### Module Import Errors
-
-**Error**: `ModuleNotFoundError`
-```bash
-# Ensure you're in the correct directory
-cd /path/to/Tutor1_s30351
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### Data Issues
-
-**Error**: `File not found`
-- Verify file path is correct
-- Check that data directories exist
-
-**Error**: `Parsing error`
-- Verify CSV format and encoding
-- Check for special characters
-
-## 📚 Module Documentation
 
 ### database_manager.py
 - `DatabaseManager`: Main class for database operations
@@ -383,49 +218,3 @@ pip install -r requirements.txt
   - `robust_scaling()`: Robust scaling
   - `standardize_dates()`: Uniform date formatting
   - `encode_categorical_data()`: Encode categorical variables
-
-## 🎯 Task 2 Requirements Checklist
-
-### Git Repository Setup (5 Points) ✅
-- [x] Separate branch (`data-standardization`)
-- [x] Consistent commit message format
-- [x] Organized repository structure with modules
-- [x] Pull request workflow ready
-
-### Database Interaction (5 Points) ✅
-- [x] Update data in database (INSERT, UPDATE, DELETE)
-- [x] Automated data loading scripts
-- [x] Efficient SQL queries with connection pooling
-- [x] Credentials in excluded configuration file
-
-### Data Standardization and Code Quality (10 Points) ✅
-- [x] Normalization methods (Min-Max, Z-score, Robust)
-- [x] Categorical data standardization
-- [x] Date/time formatting (ISO format)
-- [x] Reusable, modular code structure
-- [x] Comprehensive error handling
-- [x] Code comments and documentation
-- [x] Updated README.md with instructions
-
-## 📄 License
-
-This project is part of academic coursework at PJATK (Polish-Japanese Academy of Information Technology).
-
-## 👥 Contributors
-
-- Student ID: s30351
-- Project: PRO - Tutor3
-- Course: WIS-05-2025
-
-## 📞 Support
-
-For issues or questions:
-1. Check the troubleshooting section
-2. Review the logs in `data_pipeline.log`
-3. Consult the module documentation
-4. Contact the course instructor
-
----
-
-**Last Updated**: October 2025  
-**Version**: 3.0 (Tutor3 - Data Standardization)

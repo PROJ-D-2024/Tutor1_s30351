@@ -25,12 +25,6 @@ class DataStandardizer:
     """
     
     def __init__(self, config: Optional[Dict[str, Any]] = None):
-        """
-        Initialize DataStandardizer with optional configuration.
-        
-        Args:
-            config: Dictionary containing standardization options
-        """
         self.config = config or {}
         self.scalers = {}  # Store fitted scalers for inverse transform
         self.encoders = {}  # Store fitted encoders
@@ -140,14 +134,6 @@ class DataStandardizer:
         """
         Apply Min-Max scaling to normalize data to a specific range.
         Formula: X_scaled = (X - X_min) / (X_max - X_min) * (max - min) + min
-        
-        Args:
-            df: Input DataFrame
-            columns: Columns to scale (None for all numerical)
-            feature_range: Desired range of transformed data
-            
-        Returns:
-            DataFrame with scaled columns
         """
         df_scaled = df.copy()
         
@@ -167,13 +153,6 @@ class DataStandardizer:
         """
         Apply Z-score normalization (standardization).
         Formula: X_normalized = (X - mean) / std
-        
-        Args:
-            df: Input DataFrame
-            columns: Columns to normalize (None for all numerical)
-            
-        Returns:
-            DataFrame with normalized columns
         """
         df_normalized = df.copy()
         
@@ -191,15 +170,8 @@ class DataStandardizer:
     def robust_scaling(self, df: pd.DataFrame,
                       columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
-        Apply Robust scaling using median and IQR (robust to outliers).
+        Apply scaling using median and IQR (robust to outliers).
         Formula: X_scaled = (X - median) / IQR
-        
-        Args:
-            df: Input DataFrame
-            columns: Columns to scale (None for all numerical)
-            
-        Returns:
-            DataFrame with scaled columns
         """
         df_scaled = df.copy()
         
@@ -219,14 +191,6 @@ class DataStandardizer:
                          columns: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Standardize date and time columns to a uniform format.
-        
-        Args:
-            df: Input DataFrame
-            date_format: Target format ('ISO', 'US', 'EU')
-            columns: Specific date columns (None for auto-detection)
-            
-        Returns:
-            DataFrame with standardized date columns
         """
         df_standardized = df.copy()
         
@@ -378,21 +342,9 @@ class DataStandardizer:
         logger.info("=" * 50)
     
     def get_standardization_report(self) -> Dict[str, List[str]]:
-        """
-        Get the standardization report.
-        
-        Returns:
-            Dictionary with standardization details
-        """
         return self.standardization_report.copy()
     
     def save_scalers(self, filepath: str):
-        """
-        Save fitted scalers to file for later use.
-        
-        Args:
-            filepath: Path to save scalers
-        """
         import pickle
         
         try:
@@ -403,12 +355,6 @@ class DataStandardizer:
             logger.error(f"Error saving scalers: {e}")
     
     def load_scalers(self, filepath: str):
-        """
-        Load previously fitted scalers from file.
-        
-        Args:
-            filepath: Path to load scalers from
-        """
         import pickle
         
         try:
