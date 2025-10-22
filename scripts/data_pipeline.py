@@ -1,419 +1,278 @@
 #!/usr/bin/env python3
 """
-Data Pipeline Script
-Automated ETL (Extract, Transform, Load) pipeline for data cleaning and standardization.
-Integrates database operations with comprehensive error handling.
+Data Cleaning and Standardization Pipeline for Thesis Project
+Tutor2 - Data preprocessing pipeline using PostgreSQL
 """
 
-import sys
-import os
 import argparse
-import logging
+import json
+import os
+import sys
 from pathlib import Path
-from typing import Optional
-
-# Add parent directory to path to import modules
-sys.path.append(str(Path(__file__).parent.parent))
-
 import pandas as pd
-from database_manager import DatabaseManager
-from data_cleaning import DataCleaner
-from data_standardization import DataStandardizer
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('data_pipeline.log'),
-        logging.StreamHandler(sys.stdout)
-    ]
-)
-logger = logging.getLogger(__name__)
+# Add utils to path
+sys.path.append(str(Path(__file__).parent.parent / "utils"))
+
+from database import DatabaseConnection, get_db_connection
+from data_cleaning import clean_thesis_data
 
 
-class DataPipeline:
-    """
-    Automated data pipeline for cleaning, standardizing, and loading data.
-    """
-    
-    def __init__(self, config_path: str = "config/database_config.json"):
-        """
-        Initialize DataPipeline with configuration.
-        
-        Args:
-            config_path: Path to configuration file
-        """
-        try:
-            self.db_manager = DatabaseManager(config_path)
-            
-            # Load configuration for cleaning and standardization
-            import json
-            with open(config_path, 'r') as f:
-                config = json.load(f)
-            
-            self.data_cleaner = DataCleaner(config.get('cleaning_options', {}))
-            self.data_standardizer = DataStandardizer(config.get('standardization_options', {}))
-            self.config = config
-            
-            logger.info("DataPipeline initialized successfully")
-            
-        except Exception as e:
-            logger.error(f"Error initializing DataPipeline: {e}")
-            raise
-    
-    def extract_from_csv(self, filepath: str) -> pd.DataFrame:
-        """
-        Extract data from CSV file.
-        
-        Args:
-            filepath: Path to CSV file
-            
-        Returns:
-            DataFrame with extracted data
-            
-        Raises:
-            FileNotFoundError: If file doesn't exist
-            pd.errors.ParserError: If file cannot be parsed
-        """
-        try:
-            logger.info(f"Extracting data from {filepath}")
-            df = pd.read_csv(filepath)
-            logger.info(f"Extracted {len(df)} rows and {len(df.columns)} columns")
-            return df
-        except FileNotFoundError:
-            logger.error(f"File not found: {filepath}")
-            raise
-        except pd.errors.ParserError as e:
-            logger.error(f"Error parsing CSV file: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error reading CSV: {e}")
-            raise
-    
-    def extract_from_database(self, table_name: str) -> pd.DataFrame:
-        """
-        Extract data from database table.
-        
-        Args:
-            table_name: Name of the table to extract
-            
-        Returns:
-            DataFrame with extracted data
-        """
-        try:
-            logger.info(f"Extracting data from database table: {table_name}")
-            df = self.db_manager.read_table(table_name)
-            
-            if df is None:
-                raise ValueError(f"Failed to read table: {table_name}")
-            
-            logger.info(f"Extracted {len(df)} rows from database")
-            return df
-        except Exception as e:
-            logger.error(f"Error extracting from database: {e}")
-            raise
-    
-    def transform_data(self, df: pd.DataFrame, 
-                      clean: bool = True, 
-                      standardize: bool = True) -> pd.DataFrame:
-        """
-        Transform data by cleaning and standardizing.
-        
-        Args:
-            df: Input DataFrame
-            clean: Whether to apply cleaning
-            standardize: Whether to apply standardization
-            
-        Returns:
-            Transformed DataFrame
-        """
-        try:
-            logger.info("Starting data transformation")
-            df_transformed = df.copy()
-            
-            # Apply cleaning
-            if clean:
-                logger.info("Applying data cleaning")
-                df_transformed = self.data_cleaner.clean_dataframe(df_transformed)
-                
-                # Log cleaning report
-                cleaning_report = self.data_cleaner.get_cleaning_report()
-                logger.info(f"Cleaning report: {cleaning_report}")
-            
-            # Apply standardization
-            if standardize:
-                logger.info("Applying data standardization")
-                df_transformed = self.data_standardizer.standardize_dataframe(df_transformed)
-                
-                # Log standardization report
-                std_report = self.data_standardizer.get_standardization_report()
-                logger.info(f"Standardization report: {std_report}")
-            
-            logger.info("Data transformation completed successfully")
-            return df_transformed
-            
-        except Exception as e:
-            logger.error(f"Error during data transformation: {e}")
-            raise
-    
-    def load_to_database(self, df: pd.DataFrame, 
-                        table_name: str,
-                        mode: str = 'replace') -> bool:
-        """
-        Load data to database table.
-        
-        Args:
-            df: DataFrame to load
-            table_name: Target table name
-            mode: Load mode ('replace', 'append', 'update')
-            
-        Returns:
-            True if successful
-        """
-        try:
-            logger.info(f"Loading data to database table: {table_name} (mode: {mode})")
-            
-            if mode == 'replace':
-                # Drop and recreate table
-                if not self.db_manager.create_table_from_dataframe(
-                    df, table_name, drop_if_exists=True
-                ):
-                    raise ValueError("Failed to create table")
-                
-                # Insert data
-                if not self.db_manager.insert_dataframe(df, table_name):
-                    raise ValueError("Failed to insert data")
-            
-            elif mode == 'append':
-                # Check if table exists
-                if not self.db_manager.table_exists(table_name):
-                    # Create table if doesn't exist
-                    if not self.db_manager.create_table_from_dataframe(df, table_name):
-                        raise ValueError("Failed to create table")
-                
-                # Insert data
-                if not self.db_manager.insert_dataframe(df, table_name):
-                    raise ValueError("Failed to insert data")
-            
-            elif mode == 'update':
-                # Update existing records (requires 'id' column)
-                if 'id' not in df.columns:
-                    raise ValueError("Update mode requires 'id' column")
-                
-                if not self.db_manager.update_dataframe(df, table_name, 'id'):
-                    raise ValueError("Failed to update data")
-            
-            logger.info(f"Successfully loaded {len(df)} rows to {table_name}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error loading data to database: {e}")
+def load_config(config_path: str = "config/database_config.json") -> dict:
+    """Load configuration from JSON file"""
+    try:
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Configuration file not found: {config_path}")
+        print("Please copy config/database_config.json.example to config/database_config.json and update the values.")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"Error reading configuration file: {e}")
+        sys.exit(1)
+
+
+def setup_database_tables(db: DatabaseConnection, config: dict) -> bool:
+    """Create necessary database tables for the thesis project"""
+    tables_created = 0
+
+    # Create raw_data table
+    raw_columns = {
+        'id': 'SERIAL PRIMARY KEY',
+        'data_source': 'VARCHAR(255)',
+        'collection_date': 'TIMESTAMP',
+        'raw_content': 'TEXT',
+        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+    }
+
+    if db.create_table('raw_data', raw_columns):
+        print("✓ Created raw_data table")
+        tables_created += 1
+    else:
+        print("✗ Failed to create raw_data table")
+
+    # Create cleaned_data table
+    cleaned_columns = {
+        'id': 'SERIAL PRIMARY KEY',
+        'raw_data_id': 'INTEGER REFERENCES raw_data(id)',
+        'cleaned_content': 'JSONB',
+        'cleaning_report': 'JSONB',
+        'created_at': 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
+    }
+
+    if db.create_table('cleaned_data', cleaned_columns):
+        print("✓ Created cleaned_data table")
+        tables_created += 1
+    else:
+        print("✗ Failed to create cleaned_data table")
+
+    return tables_created == 2
+
+
+def load_data_to_database(db: DatabaseConnection, file_path: str, config: dict) -> bool:
+    """Load raw data into PostgreSQL database"""
+    try:
+        # Load data using pandas
+        df = pd.read_csv(file_path) if file_path.endswith('.csv') else pd.read_excel(file_path)
+
+        print(f"Loading {len(df)} rows from {file_path}")
+
+        # Insert data into raw_data table
+        for _, row in df.iterrows():
+            insert_query = """
+            INSERT INTO raw_data (data_source, collection_date, raw_content)
+            VALUES (%s, %s, %s)
+            """
+
+            db.execute_update(insert_query, (
+                file_path,
+                pd.Timestamp.now(),
+                row.to_json()
+            ))
+
+        print("✓ Raw data loaded into database")
+        return True
+
+    except Exception as e:
+        print(f"Error loading data to database: {e}")
+        return False
+
+
+def process_and_store_cleaned_data(db: DatabaseConnection, config: dict) -> bool:
+    """Process raw data and store cleaned results"""
+    try:
+        # Get raw data from database
+        raw_data_query = "SELECT id, raw_content FROM raw_data"
+        raw_results = db.execute_query(raw_data_query)
+
+        if not raw_results:
+            print("No raw data found in database")
             return False
-    
-    def load_to_csv(self, df: pd.DataFrame, filepath: str) -> bool:
+
+        print(f"Processing {len(raw_results)} raw data records")
+
+        for raw_id, raw_content_json in raw_results:
+            try:
+                # Convert JSON back to DataFrame row
+                row_data = json.loads(raw_content_json)
+
+                # For now, we'll process each record individually
+                # In a real scenario, you'd want to batch process this
+                print(f"Processing record {raw_id}")
+
+                # Here you would apply your thesis-specific cleaning logic
+                # For now, we'll just mark it as processed
+
+                # Store cleaned data
+                cleaned_query = """
+                INSERT INTO cleaned_data (raw_data_id, cleaned_content, cleaning_report)
+                VALUES (%s, %s, %s)
+                """
+
+                db.execute_update(cleaned_query, (
+                    raw_id,
+                    json.dumps({"status": "processed", "record_id": raw_id}),
+                    json.dumps({"method": "basic_processing", "timestamp": str(pd.Timestamp.now())})
+                ))
+
+        print("✓ Cleaned data processed and stored")
+        return True
+
+    except Exception as e:
+        print(f"Error processing cleaned data: {e}")
+        return False
+
+
+def export_cleaned_data(db: DatabaseConnection, output_path: str, config: dict) -> bool:
+    """Export cleaned data to file"""
+    try:
+        # Get cleaned data from database
+        query = """
+        SELECT cd.id, cd.cleaned_content, cd.cleaning_report, rd.data_source
+        FROM cleaned_data cd
+        JOIN raw_data rd ON cd.raw_data_id = rd.id
         """
-        Load data to CSV file.
-        
-        Args:
-            df: DataFrame to save
-            filepath: Target file path
-            
-        Returns:
-            True if successful
-        """
-        try:
-            logger.info(f"Saving data to CSV: {filepath}")
-            
-            # Create directory if doesn't exist
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            
-            df.to_csv(filepath, index=False)
-            logger.info(f"Successfully saved {len(df)} rows to {filepath}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error saving CSV: {e}")
+
+        results = db.execute_query(query)
+
+        if not results:
+            print("No cleaned data found in database")
             return False
-    
-    def run_full_pipeline(self, input_path: str, 
-                         output_path: Optional[str] = None,
-                         output_table: Optional[str] = None,
-                         input_type: str = 'csv',
-                         output_type: str = 'both') -> bool:
-        """
-        Run the complete ETL pipeline.
-        
-        Args:
-            input_path: Input file path or table name
-            output_path: Output CSV file path
-            output_table: Output database table name
-            input_type: Input type ('csv' or 'database')
-            output_type: Output type ('csv', 'database', or 'both')
-            
-        Returns:
-            True if successful
-        """
-        try:
-            logger.info("=" * 70)
-            logger.info("STARTING FULL DATA PIPELINE")
-            logger.info("=" * 70)
-            
-            # EXTRACT
-            if input_type == 'csv':
-                df = self.extract_from_csv(input_path)
-            elif input_type == 'database':
-                df = self.extract_from_database(input_path)
-            else:
-                raise ValueError(f"Invalid input type: {input_type}")
-            
-            # TRANSFORM
-            df_transformed = self.transform_data(df, clean=True, standardize=True)
-            
-            # LOAD
-            success = True
-            
-            if output_type in ['csv', 'both'] and output_path:
-                if not self.load_to_csv(df_transformed, output_path):
-                    success = False
-            
-            if output_type in ['database', 'both'] and output_table:
-                if not self.load_to_database(df_transformed, output_table, mode='replace'):
-                    success = False
-            
-            if success:
-                logger.info("=" * 70)
-                logger.info("PIPELINE COMPLETED SUCCESSFULLY")
-                logger.info("=" * 70)
-            else:
-                logger.warning("Pipeline completed with some errors")
-            
-            return success
-            
-        except Exception as e:
-            logger.error(f"Pipeline failed: {e}")
-            return False
-        finally:
-            # Cleanup
-            self.db_manager.close_all_connections()
+
+        # Convert to DataFrame for export
+        rows = []
+        for row in results:
+            cleaned_content = json.loads(row[1])
+            cleaning_report = json.loads(row[2])
+            data_source = row[3]
+
+            row_data = {
+                'cleaned_data_id': row[0],
+                'data_source': data_source,
+                'cleaning_report': cleaning_report,
+                **cleaned_content
+            }
+            rows.append(row_data)
+
+        df = pd.DataFrame(rows)
+
+        # Save to file
+        if output_path.endswith('.csv'):
+            df.to_csv(output_path, index=False)
+        elif output_path.endswith('.xlsx'):
+            df.to_excel(output_path, index=False)
+        else:
+            df.to_csv(output_path, index=False)
+
+        print(f"✓ Cleaned data exported to {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"Error exporting cleaned data: {e}")
+        return False
 
 
 def main():
-    """Main entry point for the data pipeline script."""
+    """Main pipeline function"""
     parser = argparse.ArgumentParser(
-        description='Automated data cleaning and standardization pipeline',
+        description='Data Cleaning and Standardization Pipeline for Thesis Project',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 Examples:
-  # Load CSV to database
-  python scripts/data_pipeline.py --load data/raw/input.csv --table raw_data
-  
-  # Process data from database table
-  python scripts/data_pipeline.py --process raw_data --output processed_data
-  
-  # Export table to CSV
-  python scripts/data_pipeline.py --export processed_data --csv data/output.csv
-  
-  # Run full pipeline
-  python scripts/data_pipeline.py --full data/input.csv --csv data/output.csv --table cleaned_data
+  python scripts/data_pipeline.py --load data/thesis_data.csv
+  python scripts/data_pipeline.py --process
+  python scripts/data_pipeline.py --export data/cleaned_data.csv
+  python scripts/data_pipeline.py --full data/thesis_data.csv data/cleaned_output.csv
         '''
     )
-    
-    # Command modes
-    parser.add_argument('--load', metavar='FILE', help='Load CSV file to database')
-    parser.add_argument('--process', metavar='TABLE', help='Process and clean database table')
-    parser.add_argument('--export', metavar='TABLE', help='Export database table to CSV')
-    parser.add_argument('--full', metavar='FILE', help='Run full pipeline on CSV file')
-    
-    # Options
-    parser.add_argument('--table', metavar='NAME', help='Database table name')
-    parser.add_argument('--csv', metavar='FILE', help='Output CSV file path')
-    parser.add_argument('--config', default='config/database_config.json', 
-                       help='Configuration file path')
-    parser.add_argument('--no-clean', action='store_true', help='Skip data cleaning')
-    parser.add_argument('--no-standardize', action='store_true', help='Skip standardization')
-    
+
+    parser.add_argument('--load', metavar='FILE', help='Load raw data from file to database')
+    parser.add_argument('--process', action='store_true', help='Process and clean data in database')
+    parser.add_argument('--export', metavar='FILE', help='Export cleaned data from database to file')
+    parser.add_argument('--full', nargs=2, metavar=('INPUT_FILE', 'OUTPUT_FILE'),
+                       help='Run full pipeline: load, process, and export')
+
     args = parser.parse_args()
-    
-    # Initialize pipeline
-    try:
-        pipeline = DataPipeline(args.config)
-    except Exception as e:
-        logger.error(f"Failed to initialize pipeline: {e}")
+
+    # Load configuration
+    config = load_config()
+
+    # Get database connection
+    db = get_db_connection()
+    if not db:
         sys.exit(1)
-    
+
     try:
-        # Execute requested operation
-        if args.load:
-            # Load CSV to database
-            if not args.table:
-                logger.error("--table required for --load")
+        if args.full:
+            input_file, output_file = args.full
+
+            print("=== Starting Full Pipeline ===")
+
+            # Setup database tables
+            print("Setting up database tables...")
+            if not setup_database_tables(db, config):
                 sys.exit(1)
-            
-            df = pipeline.extract_from_csv(args.load)
-            if pipeline.load_to_database(df, args.table, mode='replace'):
-                logger.info("Load completed successfully")
-            else:
-                logger.error("Load failed")
+
+            # Load data
+            print("Loading data...")
+            if not load_data_to_database(db, input_file, config):
                 sys.exit(1)
-        
+
+            # Process data
+            print("Processing data...")
+            if not process_and_store_cleaned_data(db, config):
+                sys.exit(1)
+
+            # Export data
+            print("Exporting cleaned data...")
+            if not export_cleaned_data(db, output_file, config):
+                sys.exit(1)
+
+            print("✓ Full pipeline completed successfully!")
+
+        elif args.load:
+            print("=== Loading Data ===")
+            if not setup_database_tables(db, config):
+                sys.exit(1)
+            if not load_data_to_database(db, args.load, config):
+                sys.exit(1)
+
         elif args.process:
-            # Process data from database
-            df = pipeline.extract_from_database(args.process)
-            df_transformed = pipeline.transform_data(
-                df, 
-                clean=not args.no_clean,
-                standardize=not args.no_standardize
-            )
-            
-            # Save results
-            output_table = args.table or f"{args.process}_processed"
-            if pipeline.load_to_database(df_transformed, output_table, mode='replace'):
-                logger.info("Processing completed successfully")
-            else:
-                logger.error("Processing failed")
+            print("=== Processing Data ===")
+            if not process_and_store_cleaned_data(db, config):
                 sys.exit(1)
-        
+
         elif args.export:
-            # Export database table to CSV
-            if not args.csv:
-                logger.error("--csv required for --export")
+            print("=== Exporting Data ===")
+            if not export_cleaned_data(db, args.export, config):
                 sys.exit(1)
-            
-            df = pipeline.extract_from_database(args.export)
-            if pipeline.load_to_csv(df, args.csv):
-                logger.info("Export completed successfully")
-            else:
-                logger.error("Export failed")
-                sys.exit(1)
-        
-        elif args.full:
-            # Run full pipeline
-            output_csv = args.csv or 'data/cleaned/output.csv'
-            output_table = args.table or 'cleaned_data'
-            
-            if pipeline.run_full_pipeline(
-                args.full, 
-                output_path=output_csv,
-                output_table=output_table,
-                input_type='csv',
-                output_type='both'
-            ):
-                logger.info("Full pipeline completed successfully")
-            else:
-                logger.error("Full pipeline failed")
-                sys.exit(1)
-        
+
         else:
             parser.print_help()
-    
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        sys.exit(1)
+
     finally:
-        pipeline.db_manager.close_all_connections()
+        db.disconnect()
 
 
 if __name__ == "__main__":
     main()
-

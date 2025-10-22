@@ -1,5 +1,10 @@
-# Database Configuration (contains credentials)
+# Database and credentials
 config/database_config.json
+*.db
+*.sqlite
+*.sqlite3
+.env
+.env.local
 
 # Python
 __pycache__/
@@ -19,52 +24,37 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# Virtual Environment
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # Logs
 *.log
-data_pipeline.log
+logs/
 
-# Data files (can be large)
-data/processed/*
-data/cleaned/*
+# Data files (if they are large)
+data/raw/*
+data/processed/*.csv
+data/processed/*.xlsx
 !data/processed/.gitkeep
-!data/cleaned/.gitkeep
-
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# Environment variables
-.env
-.env.local
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
 
 # Temporary files
 *.tmp
-*.bak
-*.backup
+*.temp

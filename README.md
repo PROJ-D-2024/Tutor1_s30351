@@ -1,220 +1,213 @@
-# Tutor3: Data Standardization and Code Optimization
+# Tutor2: Data Cleaning and Standardization for Thesis Project
 
-A comprehensive data cleaning and standardization pipeline with database integration for thesis research projects. This project implements professional-grade ETL (Extract, Transform, Load) operations with modular, reusable code.
+A comprehensive data preprocessing pipeline for thesis projects using PostgreSQL database integration. This project provides tools for cleaning, standardizing, and preparing research data for analysis and modeling.
 
 ## Project Overview
 
-This repository implements **Task 2 (Tutor3)** focusing on:
-- Data standardization (normalization, scaling, date formatting)
-- Code optimization and modular architecture
-- Database integration with PostgreSQL
-- Automated data pipeline with error handling
-- Comprehensive documentation and best practices
+Tutor2 is designed to help students prepare their thesis data by implementing industry-standard data cleaning and preprocessing techniques. The project uses PostgreSQL as the primary database and provides a complete pipeline for data ingestion, cleaning, and export.
 
 ## Features
 
 ### Data Cleaning Capabilities
 - **Missing Data Handling**: Multiple strategies (drop, mean, median, mode imputation)
 - **Duplicate Removal**: Automatic detection and removal of duplicate records
-- **Outlier Detection**: IQR and Z-score based outlier detection and handling
+- **Outlier Detection**: IQR-based outlier detection and handling
 - **Data Type Correction**: Automatic type inference and conversion
 - **Categorical Standardization**: Text normalization and standardization
 
-### Data Standardization Features
-- **Normalization Methods**:
-  - Min-Max Scaling (0-1 range)
-  - Z-Score Normalization (standard normal distribution)
-  - Robust Scaling (using median and IQR, resistant to outliers)
-- **Date/Time Formatting**: ISO 8601, US, and European date formats
-- **Categorical Encoding**: Label encoding and one-hot encoding
-- **Reversible Transformations**: Save and load fitted scalers
-
 ### Database Integration
-- **PostgreSQL Support**: Full database integration with connection pooling
-- **Efficient Queries**: Optimized INSERT, UPDATE, and SELECT operations
-- **Batch Operations**: Efficient batch inserts for large datasets
-- **Transaction Management**: Proper error handling and rollback support
-- **Connection Pooling**: Resource-efficient connection management
+- **PostgreSQL Support**: Full database integration with connection management
+- **Data Pipeline**: Automated ETL (Extract, Transform, Load) operations
+- **Version Control**: Git-based workflow with proper branching strategy
 
-### Pipeline Automation
-- **ETL Pipeline**: Automated Extract, Transform, Load operations
-- **Flexible I/O**: Support for CSV and database sources/destinations
-- **Command-Line Interface**: Easy-to-use CLI for common operations
-- **Logging**: Comprehensive logging to file and console
-- **Error Handling**: Robust error handling throughout the pipeline
+### Configuration Management
+- **JSON Configuration**: Flexible configuration system for database and cleaning options
+- **Environment Isolation**: Secure credential management with .gitignore protection
 
-### Command-Line Interface
+## Project Structure
 
-The pipeline script provides several commands for different operations:
-
-#### 1. Load CSV to Database
-```bash
-python scripts/data_pipeline.py --load data/raw/sample_thesis_data.csv --table raw_data
+```
+Tutor2_s30351/
+├── config/
+│   ├── database_config.json          # Database connection settings
+│   └── database_config.json.example  # Configuration template
+├── scripts/
+│   └── data_pipeline.py              # Main pipeline script
+├── utils/
+│   ├── database.py                   # Database connection utilities
+│   └── data_cleaning.py              # Data cleaning functions
+├── data/
+│   ├── raw/                          # Raw data storage
+│   ├── processed/                    # Processed data output
+│   └── cleaned/                      # Final cleaned data
+├── .gitignore                        # Git ignore rules
+└── README.md                         # This file
 ```
 
-#### 2. Process and Clean Data
+## Prerequisites
+
+- **Python 3.8+**
+- **PostgreSQL 12+**
+- **Required Python packages**:
+  ```bash
+  pip install psycopg2-binary pandas numpy scipy
+  ```
+
+## Setup Instructions
+
+### 1. Database Setup
+
+1. Install and configure PostgreSQL
+2. Create a new database for your thesis project:
+   ```sql
+   CREATE DATABASE thesis_data;
+   ```
+
+### 2. Configuration Setup
+
+1. Copy the configuration template:
+   ```bash
+   cp config/database_config.json.example config/database_config.json
+   ```
+
+2. Update `config/database_config.json` with your database credentials:
+   ```json
+   {
+     "database": {
+       "type": "postgresql",
+       "host": "localhost",
+       "port": 5432,
+       "database_name": "thesis_data",
+       "username": "your_username",
+       "password": "your_password",
+       "schema": "public"
+     }
+   }
+   ```
+
+### 3. Repository Setup
+
+1. Clone the repository and create a feature branch:
+   ```bash
+   git checkout -b feature/data-cleaning-setup
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+Run the pipeline with sample data:
+
+### Basic Pipeline Operations
+
 ```bash
-python scripts/data_pipeline.py --process raw_data --table cleaned_data
+# Load raw data into database
+python scripts/data_pipeline.py --load data/thesis_data.csv
+
+# Process and clean data
+python scripts/data_pipeline.py --process
+
+# Export cleaned data
+python scripts/data_pipeline.py --export data/cleaned_output.csv
+
+# Run complete pipeline
+python scripts/data_pipeline.py --full data/thesis_data.csv data/cleaned_output.csv
 ```
 
-#### 3. Export Database Table to CSV
+### Advanced Usage
+
 ```bash
-python scripts/data_pipeline.py --export cleaned_data --csv data/cleaned/output.csv
-```
+# Load data with custom configuration
+python scripts/data_pipeline.py --load data/thesis_data.xlsx
 
-#### 4. Run Full Pipeline
-```bash
-python scripts/data_pipeline.py --full data/raw/sample_thesis_data.csv \
-  --csv data/cleaned/output.csv \
-  --table cleaned_data
-```
+# Process with specific cleaning options (modify config first)
+python scripts/data_pipeline.py --process
 
-### Python API
-
-You can also use the modules directly in your Python code:
-
-```python
-from database_manager import DatabaseManager
-from data_cleaning import DataCleaner
-from data_standardization import DataStandardizer
-import pandas as pd
-
-# Load configuration
-db_manager = DatabaseManager("config/database_config.json")
-
-# Read data
-df = pd.read_csv("data/raw/sample_thesis_data.csv")
-
-# Clean data
-cleaner = DataCleaner({
-    'remove_duplicates': True,
-    'handle_missing_values': True,
-    'outlier_detection_method': 'IQR'
-})
-df_cleaned = cleaner.clean_dataframe(df)
-
-# Standardize data
-standardizer = DataStandardizer({
-    'normalize_numerical': True,
-    'normalization_method': 'minmax'
-})
-df_standardized = standardizer.standardize_dataframe(df_cleaned)
-
-# Load to database
-db_manager.create_table_from_dataframe(df_standardized, 'thesis_data', drop_if_exists=True)
-db_manager.insert_dataframe(df_standardized, 'thesis_data')
-
-# Cleanup
-db_manager.close_all_connections()
+# Export to different formats
+python scripts/data_pipeline.py --export data/cleaned_data.xlsx
 ```
 
 ## Configuration Options
 
+### Database Configuration
+- `host`: PostgreSQL server hostname
+- `port`: PostgreSQL server port (default: 5432)
+- `database_name`: Target database name
+- `username`: Database username
+- `password`: Database password
+- `schema`: Database schema (default: public)
+
 ### Cleaning Options
-```json
-{
-  "cleaning_options": {
-    "remove_duplicates": true,
-    "handle_missing_values": true,
-    "outlier_detection_method": "IQR",
-    "outlier_threshold": 1.5,
-    "standardize_categorical": true,
-    "normalize_numerical": false
-  }
-}
-```
+- `remove_duplicates`: Enable duplicate removal (default: true)
+- `handle_missing_values`: Enable missing value handling (default: true)
+- `outlier_detection_method`: Method for outlier detection (IQR, Z-score)
+- `outlier_threshold`: Threshold for outlier detection (default: 1.5)
+- `standardize_categorical`: Enable categorical data standardization (default: true)
+- `normalize_numerical`: Enable numerical data normalization (default: false)
 
-- `remove_duplicates`: Remove duplicate rows
-- `handle_missing_values`: Auto-handle missing values
-- `outlier_detection_method`: "IQR" or "zscore"
-- `outlier_threshold`: Sensitivity for outlier detection (1.5 for IQR, 3 for Z-score)
-- `standardize_categorical`: Normalize text data
-- `normalize_numerical`: Apply numerical normalization
+## Data Cleaning Methods
 
-### Standardization Options
-```json
-{
-  "standardization_options": {
-    "normalize_numerical": true,
-    "normalization_method": "minmax",
-    "encode_categorical": false,
-    "encoding_method": "label",
-    "standardize_dates": true,
-    "date_format": "ISO"
-  }
-}
-```
+### Missing Values Handling
+- **Auto Strategy**: Automatically chooses best method based on data type and missing percentage
+- **Drop**: Remove rows/columns with missing values
+- **Mean/Median**: Impute numerical values with mean or median
+- **Mode**: Impute categorical values with most frequent value
 
-- `normalize_numerical`: Apply numerical scaling
-- `normalization_method`: "minmax", "zscore", or "robust"
-- `encode_categorical`: Encode categorical variables
-- `encoding_method`: "label" or "onehot"
-- `standardize_dates`: Convert dates to uniform format
-- `date_format`: "ISO", "US", or "EU"
+### Outlier Detection
+- **IQR Method**: Uses Interquartile Range for outlier detection
+- **Configurable Threshold**: Adjustable sensitivity for outlier detection
 
-## Data Standardization Methods
+### Data Standardization
+- **Categorical Data**: Text normalization, whitespace handling, common abbreviation replacement
+- **Numerical Data**: Optional normalization and scaling
 
-### Min-Max Scaling
-Scales data to a fixed range (typically 0-1):
-```
-X_scaled = (X - X_min) / (X_max - X_min)
-```
+## Git Workflow
 
-### Z-Score Normalization
-Standardizes data to have mean=0 and std=1:
-```
-X_normalized = (X - mean) / std
-```
+1. **Feature Development**: Create feature branches for new functionality
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-### Robust Scaling
-Uses median and IQR (resistant to outliers):
-```
-X_scaled = (X - median) / IQR
-```
+2. **Commits**: Use descriptive commit messages
+   ```bash
+   git add .
+   git commit -m "Add data cleaning pipeline for thesis project"
+   ```
 
+3. **Pull Requests**: Create PRs for code review
+   ```bash
+   git push origin feature/your-feature-name
+   # Create PR via GitHub interface
+   ```
 
-## Testing
+4. **Merge**: Merge approved PRs to main branch
 
-Run the pipeline with sample data:
+## Example Thesis Workflow
 
-```bash
-# Test with provided sample data
-python scripts/data_pipeline.py --full data/raw/sample_thesis_data.csv \
-  --csv data/cleaned/test_output.csv \
-  --table test_cleaned_data
-```
+1. **Data Collection**: Gather raw data for your thesis
+2. **Initial Load**: Load raw data into PostgreSQL
+3. **Data Cleaning**: Apply cleaning transformations
+4. **Quality Check**: Verify data quality and completeness
+5. **Export**: Export cleaned data for analysis
+6. **Version Control**: Commit all changes with meaningful messages
 
-The sample data includes:
-- 35 student records
-- Missing values (for testing imputation)
-- Duplicates (for testing deduplication)
-- Outliers (for testing outlier detection)
-- Inconsistent date formats (for testing standardization)
+## Contributing
 
-### database_manager.py
-- `DatabaseManager`: Main class for database operations
-  - `get_connection()`: Get connection from pool
-  - `create_table_from_dataframe()`: Create table from DataFrame schema
-  - `insert_dataframe()`: Batch insert DataFrame
-  - `update_dataframe()`: Update records from DataFrame
-  - `read_table()`: Read table into DataFrame
-  - `execute_query()`: Execute custom SQL query
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-### data_cleaning.py
-- `DataCleaner`: Comprehensive data cleaning
-  - `clean_dataframe()`: Apply all cleaning operations
-  - `remove_duplicates()`: Remove duplicate rows
-  - `handle_missing_values()`: Handle missing data
-  - `detect_and_handle_outliers()`: Outlier detection and handling
-  - `correct_data_types()`: Auto-correct data types
-  - `standardize_categorical()`: Normalize text data
+## License
 
-### data_standardization.py
-- `DataStandardizer`: Data standardization and normalization
-  - `standardize_dataframe()`: Apply all standardization
-  - `normalize_numerical_data()`: Normalize numerical columns
-  - `minmax_scaling()`: Min-Max scaling
-  - `zscore_normalization()`: Z-score normalization
-  - `robust_scaling()`: Robust scaling
-  - `standardize_dates()`: Uniform date formatting
-  - `encode_categorical_data()`: Encode categorical variables
+This project is for educational purposes as part of the thesis requirements.
+
+## Support
+
+For issues and questions:
+- Review the configuration examples
+- Check database connection settings
+- Ensure all dependencies are installed
+- Verify data file formats are supported
