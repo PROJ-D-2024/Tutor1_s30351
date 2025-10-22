@@ -1,131 +1,69 @@
-# Tutor2: Data Cleaning and Standardization for Thesis Project
+# Tutor3: Data Standardization and Code Optimization
 
-A comprehensive data preprocessing pipeline for thesis projects using PostgreSQL database integration. This project provides tools for cleaning, standardizing, and preparing research data for analysis and modeling.
+A comprehensive data cleaning and standardization pipeline with database integration for thesis research projects. This project implements professional-grade ETL (Extract, Transform, Load) operations with modular, reusable code and advanced data preprocessing techniques.
 
-## Project Overview
 
-Tutor2 is designed to help students prepare their thesis data by implementing industry-standard data cleaning and preprocessing techniques. The project uses PostgreSQL as the primary database and provides a complete pipeline for data ingestion, cleaning, and export.
+The pipeline script provides several commands for different operations:
 
-## Features
-
-### Data Cleaning Capabilities
-- **Missing Data Handling**: Multiple strategies (drop, mean, median, mode imputation)
-- **Duplicate Removal**: Automatic detection and removal of duplicate records
-- **Outlier Detection**: IQR-based outlier detection and handling
-- **Data Type Correction**: Automatic type inference and conversion
-- **Categorical Standardization**: Text normalization and standardization
-
-### Database Integration
-- **PostgreSQL Support**: Full database integration with connection management
-- **Data Pipeline**: Automated ETL (Extract, Transform, Load) operations
-- **Version Control**: Git-based workflow with proper branching strategy
-
-### Configuration Management
-- **JSON Configuration**: Flexible configuration system for database and cleaning options
-- **Environment Isolation**: Secure credential management with .gitignore protection
-
-## Project Structure
-
-```
-Tutor2_s30351/
-├── config/
-│   ├── database_config.json          # Database connection settings
-│   └── database_config.json.example  # Configuration template
-├── scripts/
-│   └── data_pipeline.py              # Main pipeline script
-├── utils/
-│   ├── database.py                   # Database connection utilities
-│   └── data_cleaning.py              # Data cleaning functions
-├── data/
-│   ├── raw/                          # Raw data storage
-│   ├── processed/                    # Processed data output
-│   └── cleaned/                      # Final cleaned data
-├── .gitignore                        # Git ignore rules
-└── README.md                         # This file
-```
-
-## Prerequisites
-
-- **Python 3.8+**
-- **PostgreSQL 12+**
-- **Required Python packages**:
-  ```bash
-  pip install psycopg2-binary pandas numpy scipy
-  ```
-
-## Setup Instructions
-
-### 1. Database Setup
-
-1. Install and configure PostgreSQL
-2. Create a new database for your thesis project:
-   ```sql
-   CREATE DATABASE thesis_data;
-   ```
-
-### 2. Configuration Setup
-
-1. Copy the configuration template:
-   ```bash
-   cp config/database_config.json.example config/database_config.json
-   ```
-
-2. Update `config/database_config.json` with your database credentials:
-   ```json
-   {
-     "database": {
-       "type": "postgresql",
-       "host": "localhost",
-       "port": 5432,
-       "database_name": "thesis_data",
-       "username": "your_username",
-       "password": "your_password",
-       "schema": "public"
-     }
-   }
-   ```
-
-### 3. Repository Setup
-
-1. Clone the repository and create a feature branch:
-   ```bash
-   git checkout -b feature/data-cleaning-setup
-   ```
-
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-Run the pipeline with sample data:
-
-### Basic Pipeline Operations
-
+#### 1. Load CSV to Database
 ```bash
-# Load raw data into database
-python scripts/data_pipeline.py --load data/thesis_data.csv
-
-# Process and clean data
-python scripts/data_pipeline.py --process
-
-# Export cleaned data
-python scripts/data_pipeline.py --export data/cleaned_output.csv
-
-# Run complete pipeline
-python scripts/data_pipeline.py --full data/thesis_data.csv data/cleaned_output.csv
+python scripts/data_pipeline.py --load data/raw/sample_thesis_data.csv --table raw_data
 ```
 
-### Advanced Usage
-
+#### 2. Process and Clean Data
 ```bash
-# Load data with custom configuration
-python scripts/data_pipeline.py --load data/thesis_data.xlsx
+python scripts/data_pipeline.py --process raw_data --table cleaned_data
+```
 
-# Process with specific cleaning options (modify config first)
-python scripts/data_pipeline.py --process
+#### 3. Export Database Table to CSV
+```bash
+python scripts/data_pipeline.py --export cleaned_data --csv data/cleaned/output.csv
+```
 
-# Export to different formats
-python scripts/data_pipeline.py --export data/cleaned_data.xlsx
+#### 4. Run Full Pipeline
+```bash
+python scripts/data_pipeline.py --full data/raw/sample_thesis_data.csv \
+  --csv data/cleaned/output.csv \
+  --table cleaned_data
+```
+
+### Python API
+
+You can also use the modules directly in your Python code:
+
+```python
+from database_manager import DatabaseManager
+from data_cleaning import DataCleaner
+from data_standardization import DataStandardizer
+import pandas as pd
+
+# Load configuration
+db_manager = DatabaseManager("config/database_config.json")
+
+# Read data
+df = pd.read_csv("data/raw/sample_thesis_data.csv")
+
+# Clean data
+cleaner = DataCleaner({
+    'remove_duplicates': True,
+    'handle_missing_values': True,
+    'outlier_detection_method': 'IQR'
+})
+df_cleaned = cleaner.clean_dataframe(df)
+
+# Standardize data
+standardizer = DataStandardizer({
+    'normalize_numerical': True,
+    'normalization_method': 'minmax'
+})
+df_standardized = standardizer.standardize_dataframe(df_cleaned)
+
+# Load to database
+db_manager.create_table_from_dataframe(df_standardized, 'thesis_data', drop_if_exists=True)
+db_manager.insert_dataframe(df_standardized, 'thesis_data')
+
+# Cleanup
+db_manager.close_all_connections()
 ```
 
 ## Configuration Options
@@ -139,75 +77,102 @@ python scripts/data_pipeline.py --export data/cleaned_data.xlsx
 - `schema`: Database schema (default: public)
 
 ### Cleaning Options
-- `remove_duplicates`: Enable duplicate removal (default: true)
-- `handle_missing_values`: Enable missing value handling (default: true)
-- `outlier_detection_method`: Method for outlier detection (IQR, Z-score)
-- `outlier_threshold`: Threshold for outlier detection (default: 1.5)
-- `standardize_categorical`: Enable categorical data standardization (default: true)
-- `normalize_numerical`: Enable numerical data normalization (default: false)
+- `remove_duplicates`: Remove duplicate rows (default: true)
+- `handle_missing_values`: Auto-handle missing values (default: true)
+- `outlier_detection_method`: "IQR" or "zscore"
+- `outlier_threshold`: Sensitivity for outlier detection (1.5 for IQR, 3 for Z-score)
+- `standardize_categorical`: Normalize text data (default: true)
 
-## Data Cleaning Methods
+### Standardization Options
+- `normalize_numerical`: Apply numerical scaling (default: true)
+- `normalization_method`: "minmax", "zscore", or "robust"
+- `encode_categorical`: Encode categorical variables (default: false)
+- `encoding_method`: "label" or "onehot"
+- `standardize_dates`: Convert dates to uniform format (default: true)
+- `date_format`: "ISO", "US", or "EU"
 
-### Missing Values Handling
-- **Auto Strategy**: Automatically chooses best method based on data type and missing percentage
-- **Drop**: Remove rows/columns with missing values
-- **Mean/Median**: Impute numerical values with mean or median
-- **Mode**: Impute categorical values with most frequent value
+## Data Standardization Methods
 
-### Outlier Detection
-- **IQR Method**: Uses Interquartile Range for outlier detection
-- **Configurable Threshold**: Adjustable sensitivity for outlier detection
+### Min-Max Scaling
+Scales data to a fixed range (typically 0-1):
+```
+X_scaled = (X - X_min) / (X_max - X_min)
+```
+**Use case**: When you need bounded values in a specific range
 
-### Data Standardization
-- **Categorical Data**: Text normalization, whitespace handling, common abbreviation replacement
-- **Numerical Data**: Optional normalization and scaling
+### Z-Score Normalization
+Standardizes data to have mean=0 and std=1:
+```
+X_normalized = (X - mean) / std
+```
+**Use case**: When your data follows normal distribution
 
-## Git Workflow
+### Robust Scaling
+Uses median and IQR (resistant to outliers):
+```
+X_scaled = (X - median) / IQR
+```
+**Use case**: When your data contains outliers
 
-1. **Feature Development**: Create feature branches for new functionality
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+## Module Documentation
 
-2. **Commits**: Use descriptive commit messages
-   ```bash
-   git add .
-   git commit -m "Add data cleaning pipeline for thesis project"
-   ```
+### database_manager.py
+Main class for all database operations with connection pooling.
 
-3. **Pull Requests**: Create PRs for code review
-   ```bash
-   git push origin feature/your-feature-name
-   # Create PR via GitHub interface
-   ```
+**Key Methods:**
+- `get_connection()`: Get connection from pool
+- `create_table_from_dataframe()`: Create table from DataFrame schema
+- `insert_dataframe()`: Batch insert DataFrame (1000 rows/batch)
+- `update_dataframe()`: Update records from DataFrame
+- `read_table()`: Read table into DataFrame
+- `execute_query()`: Execute custom SQL query
 
-4. **Merge**: Merge approved PRs to main branch
+### data_cleaning.py
+Comprehensive data cleaning with multiple strategies.
 
-## Example Thesis Workflow
+**Key Methods:**
+- `clean_dataframe()`: Apply all cleaning operations
+- `remove_duplicates()`: Remove duplicate rows
+- `handle_missing_values()`: Handle missing data (auto, drop, mean, median, mode)
+- `detect_and_handle_outliers()`: Outlier detection and handling (IQR, Z-score)
+- `correct_data_types()`: Auto-correct data types
+- `standardize_categorical()`: Normalize text data
 
-1. **Data Collection**: Gather raw data for your thesis
-2. **Initial Load**: Load raw data into PostgreSQL
-3. **Data Cleaning**: Apply cleaning transformations
-4. **Quality Check**: Verify data quality and completeness
-5. **Export**: Export cleaned data for analysis
-6. **Version Control**: Commit all changes with meaningful messages
+### data_standardization.py
+Data standardization and normalization with multiple methods.
 
-## Contributing
+**Key Methods:**
+- `standardize_dataframe()`: Apply all standardization
+- `normalize_numerical_data()`: Normalize numerical columns
+- `minmax_scaling()`: Min-Max scaling
+- `zscore_normalization()`: Z-score normalization
+- `robust_scaling()`: Robust scaling
+- `standardize_dates()`: Uniform date formatting
+- `encode_categorical_data()`: Encode categorical variables
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## Security Best Practices
 
-## License
+1. **Never commit credentials**: `config/database_config.json` is gitignored
+2. **Use environment variables**: Consider using `.env` files for sensitive data
+3. **Restrict database permissions**: Use appropriate user roles
+4. **Validate input data**: All user input is validated
+5. **Use connection pooling**: Prevents connection exhaustion attacks
+6. **Parameterized queries**: Protection against SQL injection
 
-This project is for educational purposes as part of the thesis requirements.
+## Testing
 
-## Support
+Run the pipeline with sample data:
 
-For issues and questions:
-- Review the configuration examples
-- Check database connection settings
-- Ensure all dependencies are installed
-- Verify data file formats are supported
+```bash
+# Test with provided sample data
+python scripts/data_pipeline.py --full data/raw/sample_thesis_data.csv \
+  --csv data/cleaned/test_output.csv \
+  --table test_cleaned_data
+```
+
+The sample data includes:
+- 35 student records
+- Missing values (for testing imputation)
+- Duplicates (for testing deduplication)
+- Outliers (for testing outlier detection)
+- Inconsistent date formats (for testing standardization)
